@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze *)",
+      "Bash(findstr \"local_auth\")",
+      "Bash(dir \"C:\\\\Users\\\\siams\\\\AppData\\\\Local\\\\Pub\\\\Cache\\\\hosted\\\\pub.dev\" /b)",
+      "Bash(findstr local_auth)",
+      "Bash(dir *)"
+    ]
+  }
+}
