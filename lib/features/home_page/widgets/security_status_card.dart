@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/enums/biometric_status.dart';
 import '../../authentications/controller/auth_controller.dart';
 
 class SecurityStatusCard extends StatelessWidget {
@@ -8,8 +9,14 @@ class SecurityStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final biometricEnabled =
-        context.select<AuthController, bool>((a) => a.biometricEnabled);
+    final biometricStatus =
+        context.select<AuthController, BiometricStatus>((a) => a.biometricStatus);
+    final isActive = biometricStatus.isEnabled;
+    final statusLabel = switch (biometricStatus) {
+      BiometricStatus.enabled => 'Biometric auth enabled',
+      BiometricStatus.lockedOut => 'Biometric locked out',
+      _ => 'Biometric auth disabled',
+    };
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -66,9 +73,7 @@ class SecurityStatusCard extends StatelessWidget {
                         color: Colors.white70, size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      biometricEnabled
-                          ? 'Biometric auth enabled'
-                          : 'Biometric auth disabled',
+                      statusLabel,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.65),
                         fontSize: 12,
@@ -83,12 +88,12 @@ class SecurityStatusCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: biometricEnabled
+              color: isActive
                   ? const Color(0xFF4CAF50).withValues(alpha: 0.2)
                   : Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: biometricEnabled
+                color: isActive
                     ? const Color(0xFF66BB6A)
                     : Colors.white38,
                 width: 1,
@@ -98,19 +103,19 @@ class SecurityStatusCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  biometricEnabled
+                  isActive
                       ? Icons.check_circle_rounded
                       : Icons.radio_button_unchecked_rounded,
-                  color: biometricEnabled
+                  color: isActive
                       ? const Color(0xFF66BB6A)
                       : Colors.white54,
                   size: 13,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  biometricEnabled ? 'Active' : 'Inactive',
+                  isActive ? 'Active' : 'Inactive',
                   style: TextStyle(
-                    color: biometricEnabled
+                    color: isActive
                         ? const Color(0xFF66BB6A)
                         : Colors.white54,
                     fontSize: 11,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/enums/biometric_auth_result.dart';
 import '../../home_page/screen/home_page.dart';
 import '../controller/auth_controller.dart';
 import '../widgets/biometric_button.dart';
@@ -35,14 +36,23 @@ class _LoginPageState extends State<LoginPage> {
     final auth = context.read<AuthController>();
     final result = await auth.biometricLogin();
     if (!mounted) return;
-    if (result == true) {
-      _goHome();
-    } else if (result == false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Biometric authentication failed. Please sign in manually.'),
-        ),
-      );
+    switch (result) {
+      case BiometricAuthResult.success:
+        _goHome();
+      case BiometricAuthResult.failure:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric authentication failed. Please sign in manually.'),
+          ),
+        );
+      case BiometricAuthResult.lockedOut:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometrics locked out after too many attempts. Please sign in manually.'),
+          ),
+        );
+      default:
+        break;
     }
   }
 

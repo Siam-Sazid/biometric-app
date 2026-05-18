@@ -1,5 +1,6 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:logger/logger.dart';
+import '../enums/biometric_auth_result.dart';
 
 class BiometricService {
   final LocalAuthentication _auth = LocalAuthentication();
@@ -17,8 +18,7 @@ class BiometricService {
     return await _auth.getAvailableBiometrics();
   }
 
-  // Returns true = success, false = failed, null = user cancelled
-  Future<bool?> authenticate() async {
+  Future<BiometricAuthResult> authenticate() async {
     await _auth.stopAuthentication();
     _log.i('[Biometric] Starting authentication...');
     try {
@@ -28,33 +28,34 @@ class BiometricService {
       );
       if (result) {
         _log.i('[Biometric] SUCCESS — authentication passed');
+        return BiometricAuthResult.success;
       } else {
         _log.w('[Biometric] FAILED — authentication rejected');
+        return BiometricAuthResult.failure;
       }
-      return result;
     } on LocalAuthException catch (e) {
       switch (e.code) {
         case LocalAuthExceptionCode.userCanceled:
         case LocalAuthExceptionCode.systemCanceled:
           _log.i('[Biometric] CANCELLED — ${e.code.name}');
-          return null;
+          return BiometricAuthResult.cancelled;
         case LocalAuthExceptionCode.temporaryLockout:
         case LocalAuthExceptionCode.biometricLockout:
           _log.e('[Biometric] LOCKED OUT — too many failed attempts');
-          return false;
+          return BiometricAuthResult.lockedOut;
         case LocalAuthExceptionCode.noBiometricsEnrolled:
           _log.w('[Biometric] No biometrics enrolled on this device');
-          return false;
+          return BiometricAuthResult.failure;
         case LocalAuthExceptionCode.noBiometricHardware:
           _log.w('[Biometric] No biometric hardware available');
-          return false;
+          return BiometricAuthResult.failure;
         default:
           _log.e('[Biometric] Error: ${e.code.name} — ${e.description}');
-          return false;
+          return BiometricAuthResult.failure;
       }
     } catch (e) {
       _log.e('[Biometric] Unexpected exception type: ${e.runtimeType} — $e');
-      return false;
+      return BiometricAuthResult.failure;
     }
   }
 

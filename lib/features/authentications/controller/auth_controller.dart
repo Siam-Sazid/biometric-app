@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/enums/biometric_auth_result.dart';
+import '../../../core/enums/biometric_status.dart';
 import '../../../core/services/biometric_services.dart';
 import '../../../core/services/secure_storage_services.dart';
 
@@ -8,7 +10,7 @@ class AuthController with ChangeNotifier {
 
   bool isLoading = false;
   bool isLoggedIn = false;
-  bool biometricEnabled = false;
+  BiometricStatus biometricStatus = BiometricStatus.unknown;
   String userName = '';
 
   AuthController() {
@@ -16,7 +18,7 @@ class AuthController with ChangeNotifier {
   }
 
   Future<void> _loadBiometricState() async {
-    biometricEnabled = await _storage.isBiometricEnabled();
+    biometricStatus = await _storage.getBiometricStatus();
     notifyListeners();
   }
 
@@ -29,37 +31,42 @@ class AuthController with ChangeNotifier {
     userName = email.split('@').first;
     isLoggedIn = true;
     isLoading = false;
-    biometricEnabled = await _storage.isBiometricEnabled();
+    biometricStatus = await _storage.getBiometricStatus();
     notifyListeners();
 
     return true;
   }
 
   Future<void> enableBiometric() async {
-    await _storage.enableBiometric();
-    biometricEnabled = true;
+    biometricStatus = BiometricStatus.enabled;
+    await _storage.saveBiometricStatus(biometricStatus);
     notifyListeners();
   }
 
-  // Returns true = success, false = failed, null = cancelled or not enabled
-  Future<bool?> biometricLogin() async {
-    if (!biometricEnabled) return null;
+  // Returns null when biometric is not in a state that allows an attempt.
+  Future<BiometricAuthResult?> biometricLogin() async {
+    if (!biometricStatus.canAttempt) return null;
 
     final result = await _biometricService.authenticate();
 
-    if (result == true) {
-      isLoggedIn = true;
-      notifyListeners();
-      return true;
+    switch (result) {
+      case BiometricAuthResult.success:
+        isLoggedIn = true;
+      case BiometricAuthResult.lockedOut:
+        biometricStatus = BiometricStatus.lockedOut;
+        await _storage.saveBiometricStatus(biometricStatus);
+      default:
+        break;
     }
 
+    notifyListeners();
     return result;
   }
 
   Future<void> logout() async {
-    await _storage.disableBiometric();
+    biometricStatus = BiometricStatus.disabled;
+    await _storage.saveBiometricStatus(biometricStatus);
     isLoggedIn = false;
-    biometricEnabled = false;
     userName = '';
     notifyListeners();
   }
