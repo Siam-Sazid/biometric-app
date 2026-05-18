@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 import '../../../core/services/biometric_services.dart';
 import '../../../core/services/secure_storage_services.dart';
 
-
-
 class AuthController with ChangeNotifier {
-  final BiometricService _biometricService =
-  BiometricService();
-
-  final SecureStorageService _storage =
-  SecureStorageService();
+  final BiometricService _biometricService = BiometricService();
+  final SecureStorageService _storage = SecureStorageService();
 
   bool isLoading = false;
-
   bool isLoggedIn = false;
+  bool biometricEnabled = false;
+  String userName = '';
+
+  AuthController() {
+    _loadBiometricState();
+  }
+
+  Future<void> _loadBiometricState() async {
+    biometricEnabled = await _storage.isBiometricEnabled();
+    notifyListeners();
+  }
 
   Future<bool> login(String email, String password) async {
     isLoading = true;
@@ -21,23 +26,23 @@ class AuthController with ChangeNotifier {
 
     await Future.delayed(const Duration(seconds: 2));
 
+    userName = email.split('@').first;
     isLoggedIn = true;
     isLoading = false;
+    biometricEnabled = await _storage.isBiometricEnabled();
     notifyListeners();
 
     return true;
   }
 
-  /// Enable biometric after first login
-  Future<bool> isBiometricEnabled() => _storage.isBiometricEnabled();
-
   Future<void> enableBiometric() async {
     await _storage.enableBiometric();
+    biometricEnabled = true;
+    notifyListeners();
   }
 
   // Returns true = success, false = failed, null = cancelled or not enabled
   Future<bool?> biometricLogin() async {
-    final biometricEnabled = await _storage.isBiometricEnabled();
     if (!biometricEnabled) return null;
 
     final result = await _biometricService.authenticate();
@@ -48,11 +53,14 @@ class AuthController with ChangeNotifier {
       return true;
     }
 
-    return result; // false = failed, null = cancelled
+    return result;
   }
 
   Future<void> logout() async {
+    await _storage.disableBiometric();
     isLoggedIn = false;
+    biometricEnabled = false;
+    userName = '';
     notifyListeners();
   }
 }

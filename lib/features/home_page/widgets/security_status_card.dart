@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../authentications/controller/auth_controller.dart';
 
 class SecurityStatusCard extends StatelessWidget {
   const SecurityStatusCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final biometricEnabled =
+        context.select<AuthController, bool>((a) => a.biometricEnabled);
+
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -31,7 +37,8 @@ class SecurityStatusCard extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.verified_user_outlined, color: Colors.white, size: 30),
+            child: const Icon(Icons.verified_user_outlined,
+                color: Colors.white, size: 30),
           ),
           const SizedBox(width: 18),
           Expanded(
@@ -40,7 +47,8 @@ class SecurityStatusCard extends StatelessWidget {
               children: [
                 Text(
                   'Security Status',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                 ),
                 const SizedBox(height: 4),
                 const Text(
@@ -54,10 +62,13 @@ class SecurityStatusCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.fingerprint, color: Colors.white70, size: 14),
+                    const Icon(Icons.fingerprint,
+                        color: Colors.white70, size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      'Biometric auth enabled',
+                      biometricEnabled
+                          ? 'Biometric auth enabled'
+                          : 'Biometric auth disabled',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.65),
                         fontSize: 12,
@@ -69,21 +80,39 @@ class SecurityStatusCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+              color: biometricEnabled
+                  ? const Color(0xFF4CAF50).withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF66BB6A), width: 1),
+              border: Border.all(
+                color: biometricEnabled
+                    ? const Color(0xFF66BB6A)
+                    : Colors.white38,
+                width: 1,
+              ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_rounded, color: Color(0xFF66BB6A), size: 13),
-                SizedBox(width: 4),
+                Icon(
+                  biometricEnabled
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: biometricEnabled
+                      ? const Color(0xFF66BB6A)
+                      : Colors.white54,
+                  size: 13,
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  'Active',
+                  biometricEnabled ? 'Active' : 'Inactive',
                   style: TextStyle(
-                    color: Color(0xFF66BB6A),
+                    color: biometricEnabled
+                        ? const Color(0xFF66BB6A)
+                        : Colors.white54,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),

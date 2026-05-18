@@ -56,12 +56,14 @@ class HomeSliverHeader extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        const Text(
-                          'John Doe',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                        Consumer<AuthController>(
+                          builder: (context, auth, _) => Text(
+                            auth.userName.isEmpty ? 'User' : auth.userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
