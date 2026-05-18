@@ -1,51 +1,19 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
-  static const FlutterSecureStorage _storage =
-  FlutterSecureStorage();
+  static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  static const String tokenKey = "auth_token";
-
-  static const String biometricEnabledKey =
-      "biometric_enabled";
-
-  Future<void> saveToken(String token) async {
-    await _storage.write(
-      key: tokenKey,
-      value: token,
-    );
-  }
-
-  Future<String?> getToken() async {
-    return await _storage.read(
-      key: tokenKey,
-    );
-  }
-
-  Future<void> deleteToken() async {
-    await _storage.delete(
-      key: tokenKey,
-    );
-  }
+  static const String _biometricEnabledKey = "biometric_enabled";
 
   Future<void> enableBiometric() async {
-    await _storage.write(
-      key: biometricEnabledKey,
-      value: "true",
-    );
+    await _storage.write(key: _biometricEnabledKey, value: "true");
   }
 
   Future<bool> isBiometricEnabled() async {
-    final value = await _storage.read(
-      key: biometricEnabledKey,
-    );
-
-    return value == "true";
+    return await _storage.read(key: _biometricEnabledKey) == "true";
   }
 
   Future<void> disableBiometric() async {
-    await _storage.delete(
-      key: biometricEnabledKey,
-    );
+    await _storage.delete(key: _biometricEnabledKey);
   }
 }

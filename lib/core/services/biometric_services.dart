@@ -15,14 +15,19 @@ class BiometricService {
     return await _auth.getAvailableBiometrics();
   }
 
-  Future<bool> authenticate() async {
+  // Returns true = success, false = failed, null = user cancelled
+  Future<bool?> authenticate() async {
+    await _auth.stopAuthentication();
     try {
-      return await _auth.authenticate(
+      final result = await _auth.authenticate(
         localizedReason: 'Authenticate to continue',
-        biometricOnly: false,
         persistAcrossBackgrounding: true,
       );
-    } on LocalAuthException {
+      if (!result) print('Fingerprint does not match');
+      return result ? true : false;
+    } on LocalAuthException catch (e) {
+      if (e.code == LocalAuthExceptionCode.userCanceled) return null;
+      print('LocalAuthException: ${e.code} — ${e.description}');
       return false;
     }
   }

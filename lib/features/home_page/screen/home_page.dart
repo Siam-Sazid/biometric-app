@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../../authentications/controller/auth_controller.dart';
-import '../../authentications/screen/login_page.dart';
+import '../widgets/home_sliver_header.dart';
+import '../widgets/quick_actions_grid.dart';
+import '../widgets/recent_activity_card.dart';
+import '../widgets/section_title.dart';
+import '../widgets/security_status_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -10,21 +12,27 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            await context.read<AuthController>().logout();
-
-            if (context.mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              );
-            }
-          },
-          child: const Text('Logout'),
-        ),
+      backgroundColor: const Color(0xFFF2F4F8),
+      body: CustomScrollView(
+        slivers: [
+          const HomeSliverHeader(),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const SecurityStatusCard(),
+                const SizedBox(height: 28),
+                const SectionTitle('Quick Actions'),
+                const SizedBox(height: 14),
+                const QuickActionsGrid(),
+                const SizedBox(height: 28),
+                const SectionTitle('Recent Activity'),
+                const SizedBox(height: 14),
+                const RecentActivityCard(),
+              ]),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../home_page/screen/home_page.dart';
 import '../controller/auth_controller.dart';
+import '../widgets/biometric_button.dart';
+import '../widgets/login_form_card.dart';
+import '../widgets/login_header.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,30 +15,33 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => autoBiometricLogin());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoBiometricLogin());
   }
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> autoBiometricLogin() async {
+  Future<void> _autoBiometricLogin() async {
     final auth = context.read<AuthController>();
-    final success = await auth.biometricLogin();
-
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+    final result = await auth.biometricLogin();
+    if (!mounted) return;
+    if (result == true) {
+      _goHome();
+    } else if (result == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Biometric authentication failed. Please sign in manually.'),
+        ),
       );
     }
   }
@@ -44,38 +50,35 @@ class _LoginPageState extends State<LoginPage> {
     final auth = context.read<AuthController>();
     final navigator = Navigator.of(context);
 
-    final success = await auth.login(
-      emailController.text,
-      passwordController.text,
-    );
-
+    final success = await auth.login(_emailController.text, _passwordController.text);
     if (!success || !mounted) return;
 
     final enableBiometric = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Enable Biometric Login'),
-        content: const Text(
-          'Would you like to use fingerprint or face ID to log in next time?',
-        ),
+        content: const Text('Use fingerprint or face ID to sign in next time?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: const Text('Not now'),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes'),
+            child: const Text('Enable'),
           ),
         ],
       ),
     );
 
-    if (enableBiometric == true) {
-      await auth.enableBiometric();
-    }
+    if (enableBiometric == true) await auth.enableBiometric();
+    navigator.pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+  }
 
-    navigator.pushReplacement(
+  void _goHome() {
+    Navigator.pushReplacement(
+      context,
       MaterialPageRoute(builder: (_) => const HomePage()),
     );
   }
@@ -85,32 +88,35 @@ class _LoginPageState extends State<LoginPage> {
     final isLoading = context.select<AuthController, bool>((a) => a.isLoading);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(hintText: 'Email'),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(hintText: 'Password'),
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : _onLogin,
-                child: isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Login'),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0D1B4B), Color(0xFF1A3A8F), Color(0xFF2D5BE3)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const LoginHeader(),
+                  const SizedBox(height: 40),
+                  LoginFormCard(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    isLoading: isLoading,
+                    onLogin: _onLogin,
+                  ),
+                  const SizedBox(height: 28),
+                  BiometricButton(onTap: isLoading ? null : _autoBiometricLogin),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
