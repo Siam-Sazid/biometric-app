@@ -38,7 +38,7 @@ class AuthController with ChangeNotifier {
   }
 
   Future<void> enableBiometric() async {
-    biometricStatus = BiometricStatus.enabled;
+    biometricStatus = biometricStatus.enable();
     await _storage.saveBiometricStatus(biometricStatus);
     notifyListeners();
   }
@@ -53,7 +53,7 @@ class AuthController with ChangeNotifier {
       case BiometricAuthResult.success:
         isLoggedIn = true;
       case BiometricAuthResult.lockedOut:
-        biometricStatus = BiometricStatus.lockedOut;
+        biometricStatus = biometricStatus.lockOut();
         await _storage.saveBiometricStatus(biometricStatus);
       default:
         break;
@@ -64,7 +64,7 @@ class AuthController with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    biometricStatus = BiometricStatus.disabled;
+    biometricStatus = biometricStatus.reset();
     await _storage.saveBiometricStatus(biometricStatus);
     isLoggedIn = false;
     userName = '';

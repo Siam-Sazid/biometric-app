@@ -13,7 +13,8 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\siams\\\\StudioProjects\\\\biometric_app\" -Recurse -Force)",
       "Bash(Select-Object -First 50)",
       "Bash(Format-Table FullName)",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\siams\\\\StudioProjects\\\\biometric_app\\\\lib\" -Recurse | Where-Object {$_.PSIsContainer} | Select-Object FullName)"
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\siams\\\\StudioProjects\\\\biometric_app\\\\lib\" -Recurse | Where-Object {$_.PSIsContainer} | Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\siams\\\\StudioProjects\\\\biometric_app\" -Recurse -File)"
     ]
   }
 }
