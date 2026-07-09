@@ -11,14 +11,16 @@ class AuthController with ChangeNotifier {
   bool isLoading = false;
   bool isLoggedIn = false;
   BiometricStatus biometricStatus = BiometricStatus.unknown;
+  bool hasPatternLock = false;
   String userName = '';
 
   AuthController() {
-    _loadBiometricState();
+    _loadAuthState();
   }
 
-  Future<void> _loadBiometricState() async {
+  Future<void> _loadAuthState() async {
     biometricStatus = await _storage.getBiometricStatus();
+    hasPatternLock = await _storage.hasPattern();
     notifyListeners();
   }
 
@@ -48,7 +50,21 @@ class AuthController with ChangeNotifier {
     if (!biometricStatus.canAttempt) return null;
 
     final result = await _biometricService.authenticate();
+    await _handleBiometricResult(result);
+    return result;
+  }
 
+  // Biometric-only attempt (no OS credential fallback), used by the custom
+  // in-app auth sheet, which falls back to the pattern lock itself instead.
+  Future<BiometricAuthResult> attemptBiometric() async {
+    if (!biometricStatus.canAttempt) return BiometricAuthResult.failure;
+
+    final result = await _biometricService.authenticateWithBiometrics();
+    await _handleBiometricResult(result);
+    return result;
+  }
+
+  Future<void> _handleBiometricResult(BiometricAuthResult result) async {
     switch (result) {
       case BiometricAuthResult.success:
         isLoggedIn = true;
@@ -58,9 +74,23 @@ class AuthController with ChangeNotifier {
       default:
         break;
     }
-
     notifyListeners();
-    return result;
+  }
+
+  Future<void> setPattern(String pattern) async {
+    await _storage.savePattern(pattern);
+    hasPatternLock = true;
+    notifyListeners();
+  }
+
+  Future<bool> verifyPattern(String pattern) async {
+    final stored = await _storage.getPattern();
+    final matches = stored != null && stored == pattern;
+    if (matches) {
+      isLoggedIn = true;
+      notifyListeners();
+    }
+    return matches;
   }
 
   Future<void> logout() async {

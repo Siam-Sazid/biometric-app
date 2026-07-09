@@ -4,6 +4,7 @@ import '../enums/biometric_status.dart';
 class SecureStorageService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
   static const String _biometricStatusKey = 'biometric_status';
+  static const String _patternKey = 'app_pattern';
 
   Future<void> saveBiometricStatus(BiometricStatus status) async {
     await _storage.write(key: _biometricStatusKey, value: status.name);
@@ -12,5 +13,22 @@ class SecureStorageService {
   Future<BiometricStatus> getBiometricStatus() async {
     final raw = await _storage.read(key: _biometricStatusKey);
     return BiometricStatus.fromString(raw);
+  }
+
+  Future<void> savePattern(String pattern) async {
+    await _storage.write(key: _patternKey, value: pattern);
+  }
+
+  Future<String?> getPattern() async {
+    return _storage.read(key: _patternKey);
+  }
+
+  Future<bool> hasPattern() async {
+    final pattern = await getPattern();
+    return pattern != null && pattern.isNotEmpty;
+  }
+
+  Future<void> clearPattern() async {
+    await _storage.delete(key: _patternKey);
   }
 }

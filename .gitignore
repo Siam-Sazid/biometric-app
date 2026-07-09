@@ -1,5 +1,6 @@
 # Miscellaneous
 .claude/
+CLAUDE.md
 *.class
 *.log
 *.pyc

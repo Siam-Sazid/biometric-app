@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../core/enums/biometric_auth_result.dart';
 import '../../home_page/screen/home_page.dart';
 import '../controller/auth_controller.dart';
+import '../widgets/biometric_auth_sheet.dart';
 import '../widgets/biometric_button.dart';
 import '../widgets/login_form_card.dart';
 import '../widgets/login_header.dart';
+import '../widgets/pattern_setup_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -82,7 +84,14 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
 
-    if (enableBiometric == true) await auth.enableBiometric();
+    if (enableBiometric == true) {
+      await auth.enableBiometric();
+      if (!auth.hasPatternLock && mounted) {
+        await showPatternSetupDialog(context);
+      }
+    }
+
+    if (!mounted) return;
     navigator.pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
   }
 
@@ -91,6 +100,12 @@ class _LoginPageState extends State<LoginPage> {
       context,
       MaterialPageRoute(builder: (_) => const HomePage()),
     );
+  }
+
+  Future<void> _openBiometricSheet() async {
+    final success = await showBiometricAuthSheet(context);
+    if (!mounted) return;
+    if (success) _goHome();
   }
 
   @override
@@ -122,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                     onLogin: _onLogin,
                   ),
                   const SizedBox(height: 28),
-                  BiometricButton(onTap: isLoading ? null : _autoBiometricLogin),
+                  BiometricButton(onTap: isLoading ? null : _openBiometricSheet),
                 ],
               ),
             ),

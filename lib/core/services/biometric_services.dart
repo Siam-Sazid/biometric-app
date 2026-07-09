@@ -34,32 +34,15 @@ class BiometricService {
         return BiometricAuthResult.failure;
       }
     } on LocalAuthException catch (e) {
-      switch (e.code) {
-        case LocalAuthExceptionCode.userCanceled:
-        case LocalAuthExceptionCode.systemCanceled:
-          _log.i('[Biometric] CANCELLED — ${e.code.name}');
-          return BiometricAuthResult.cancelled;
-        case LocalAuthExceptionCode.temporaryLockout:
-        case LocalAuthExceptionCode.biometricLockout:
-          _log.e('[Biometric] LOCKED OUT — too many failed attempts');
-          return BiometricAuthResult.lockedOut;
-        case LocalAuthExceptionCode.noBiometricsEnrolled:
-          _log.w('[Biometric] No biometrics enrolled on this device');
-          return BiometricAuthResult.failure;
-        case LocalAuthExceptionCode.noBiometricHardware:
-          _log.w('[Biometric] No biometric hardware available');
-          return BiometricAuthResult.failure;
-        default:
-          _log.e('[Biometric] Error: ${e.code.name} — ${e.description}');
-          return BiometricAuthResult.failure;
-      }
+      return _mapException(e);
     } catch (e) {
       _log.e('[Biometric] Unexpected exception type: ${e.runtimeType} — $e');
       return BiometricAuthResult.failure;
     }
   }
 
-  Future<bool> authenticateWithBiometrics() async {
+  Future<BiometricAuthResult> authenticateWithBiometrics() async {
+    await _auth.stopAuthentication();
     _log.i('[Biometric] Starting biometric-only authentication...');
     try {
       final result = await _auth.authenticate(
@@ -69,13 +52,38 @@ class BiometricService {
       );
       if (result) {
         _log.i('[Biometric] SUCCESS — biometric matched');
+        return BiometricAuthResult.success;
       } else {
         _log.w('[Biometric] FAILED — biometric did not match');
+        return BiometricAuthResult.failure;
       }
-      return result;
     } on LocalAuthException catch (e) {
-      _log.e('[Biometric] Error: ${e.code.name} — ${e.description}');
-      return false;
+      return _mapException(e);
+    } catch (e) {
+      _log.e('[Biometric] Unexpected exception type: ${e.runtimeType} — $e');
+      return BiometricAuthResult.failure;
+    }
+  }
+
+  BiometricAuthResult _mapException(LocalAuthException e) {
+    switch (e.code) {
+      case LocalAuthExceptionCode.userCanceled:
+      case LocalAuthExceptionCode.systemCanceled:
+        _log.i('[Biometric] CANCELLED — ${e.code.name}');
+        return BiometricAuthResult.cancelled;
+      case LocalAuthExceptionCode.temporaryLockout:
+      case LocalAuthExceptionCode.biometricLockout:
+        _log.e('[Biometric] LOCKED OUT — too many failed attempts');
+        return BiometricAuthResult.lockedOut;
+      case LocalAuthExceptionCode.noBiometricsEnrolled:
+        _log.w('[Biometric] No biometrics enrolled on this device');
+        return BiometricAuthResult.failure;
+      case LocalAuthExceptionCode.noBiometricHardware:
+        _log.w('[Biometric] No biometric hardware available');
+        return BiometricAuthResult.failure;
+      default:
+        _log.e('[Biometric] Error: ${e.code.name} — ${e.description}');
+        return BiometricAuthResult.failure;
     }
   }
 
